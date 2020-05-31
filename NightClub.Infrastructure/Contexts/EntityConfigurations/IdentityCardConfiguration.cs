@@ -13,6 +13,8 @@ namespace NightClub.Infrastructure.Contexts.EntityConfigurations
         {
             builder.HasKey(e => e.Id);
 
+            builder.Property(e => e.CardNumber).IsRequired();
+
             builder
                 .HasIndex(e => e.CardNumber)
                 .IsUnique();

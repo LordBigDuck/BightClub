@@ -1,3 +1,4 @@
+using AutoMapper;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.EntityFrameworkCore;
@@ -22,6 +23,8 @@ namespace NightClub.API
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddScoped<IMemberService, MemberService>();
+
+            services.AddAutoMapper(typeof(Startup));
 
             services.AddDbContext<NightClubContext>(options =>
             {

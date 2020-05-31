@@ -3,15 +3,17 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using NightClub.Infrastructure.Contexts;
 
 namespace NightClub.Infrastructure.Migrations
 {
     [DbContext(typeof(NightClubContext))]
-    partial class NightClubContextModelSnapshot : ModelSnapshot
+    [Migration("20200531133128_AddUniqueConstraint")]
+    partial class AddUniqueConstraint
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -161,14 +163,14 @@ namespace NightClub.Infrastructure.Migrations
                         new
                         {
                             Id = 1,
-                            Code = "bff52a3b-e465-43fd-a551-f845b99a2a43",
+                            Code = "007c7060-2317-4e3c-85b2-cb1d78d3016e",
                             IsActive = false,
                             MemberId = 1
                         },
                         new
                         {
                             Id = 2,
-                            Code = "f6275549-132f-4b9c-a87f-ac5ada040eae",
+                            Code = "e8aa251f-39a7-4db8-be3e-3e3a3f305529",
                             IsActive = true,
                             MemberId = 1
                         });

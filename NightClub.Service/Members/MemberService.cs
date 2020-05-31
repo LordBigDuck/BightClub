@@ -32,24 +32,70 @@ namespace NightClub.Service.Members
                 .ToListAsync();
         }
 
+        public Task<Member> GetMemberById(int id)
+        {
+            return _context.Members
+                .Include(m => m.IdentityCards)
+                .Include(m => m.Blacklists)
+                .Include(m => m.MemberCards)
+                .SingleOrDefaultAsync(m => m.Id == id);
+        }
+
+        public Task<Member> GetMemberByPhoneNumber(GetMemberByPhoneNumberCommand command)
+        {
+            if (command == null)
+            {
+                throw new CustomBadRequestException(ExceptionMessage.NullCommand);
+            }
+
+            return _context.Members
+                .Include(m => m.IdentityCards)
+                .Include(m => m.Blacklists)
+                .Include(m => m.MemberCards)
+                .SingleOrDefaultAsync(m => m.PhoneNumber == command.PhoneNumber);
+        }
+
+        public Task<Member> GetMemberByEmail(GetMemberByEmailCommand command)
+        {
+            if (command == null)
+            {
+                throw new CustomBadRequestException(ExceptionMessage.NullCommand);
+            }
+
+            if (!IsEmailValid(command.Email))
+            {
+                throw new CustomBadRequestException(ExceptionMessage.BadEmailFormat);
+            }
+
+            return _context.Members
+                .Include(m => m.IdentityCards)
+                .Include(m => m.Blacklists)
+                .Include(m => m.MemberCards)
+                .SingleOrDefaultAsync(m => m.Email == command.Email);
+        }
+
         public async Task<Member> CreateMember(CreateMemberCommand command)
         {
-            // TODO add exception message from Core.Exceptions ExceptionMessage
+            if (command == null)
+            {
+                throw new CustomBadRequestException(ExceptionMessage.NullCommand);
+            }
+
             if (String.IsNullOrEmpty(command.PhoneNumber) && String.IsNullOrEmpty(command.Email))
             {
-                throw new CustomBadRequestException();
+                throw new CustomBadRequestException(ExceptionMessage.MemberEmptyEmailAndPhone);
             }
 
             if (command.IdCard == null)
             {
-                throw new CustomBadRequestException();
+                throw new CustomBadRequestException(ExceptionMessage.IdCardNull);
             }
 
-            if (String.IsNullOrEmpty(command.Email))
+            if (!String.IsNullOrEmpty(command.Email))
             {
                 if (!IsEmailValid(command.Email))
                 {
-                    throw new CustomBadRequestException();
+                    throw new CustomBadRequestException(ExceptionMessage.BadEmailFormat);
                 }
             }
 
@@ -78,7 +124,99 @@ namespace NightClub.Service.Members
 
             _context.Members.Add(member);
             await _context.SaveChangesAsync();
+            return member;
+        }
 
+        public async Task<Member> BlacklistMember(BlacklistMemberCommand command)
+        {
+            if (command == null)
+            {
+                throw new CustomBadRequestException(ExceptionMessage.NullCommand);
+            }
+
+            if (DateTime.Compare(command.StartDate, command.EndDate) > 0)
+            {
+                throw new CustomBadRequestException(ExceptionMessage.NullCommand);
+            }
+
+            if (DateTime.Compare(command.EndDate, DateTime.Today) < 0)
+            {
+                throw new CustomBadRequestException(ExceptionMessage.BlacklistInvalidEndDate);
+            }
+
+            var member = _context.Members
+                .Include(m => m.Blacklists)
+                .SingleOrDefault(m => m.Id == command.MemberId);
+
+            if (member == null)
+            {
+                throw new CustomNotFoundException(ExceptionMessage.MemberIdNotFound);
+            }
+
+            member.Blacklists.Add(new Blacklist
+            {
+                EndDate = command.EndDate,
+                StartDate = command.StartDate
+            });
+            await _context.SaveChangesAsync();
+            return member;
+        }
+
+        public async Task<Member> GenerateNewMemberCard(int memberId)
+        {
+            var member = _context.Members
+                .Include(m => m.MemberCards)
+                .SingleOrDefault(m => m.Id == memberId);
+
+            if (member == null)
+            {
+                throw new CustomNotFoundException(ExceptionMessage.MemberIdNotFound);
+            }
+
+            foreach(var memberCard in member.MemberCards)
+            {
+                if (memberCard.IsActive)
+                {
+                    memberCard.IsActive = false;
+                }
+            }
+
+            member.MemberCards.Add(MemberCard.GenerateMemberCard());
+            await _context.SaveChangesAsync();
+            return member;
+        }
+
+
+        public async Task<Member> UpdateIdCard(UpdateIdCardCommand command)
+        {
+            if (command == null)
+            {
+                throw new CustomBadRequestException(ExceptionMessage.NullCommand);
+            }
+
+            var member = _context.Members
+                .Include(m => m.IdentityCards)
+                .SingleOrDefault(m => m.Id == command.MemberId);
+
+            if (member == null)
+            {
+                throw new CustomNotFoundException(ExceptionMessage.MemberIdNotFound);
+            }
+
+            var idCard = new IdentityCard
+            {
+                Firstname = command.Firstname,
+                Lastname = command.Lastname,
+                BirthDate = command.BirthDate,
+                CardNumber = command.CardNumber,
+                ExpirationDate = command.ExpirationDate,
+                ValidityDate = command.ValidityDate,
+                NationalRegisterNumber = command.NationalRegisterNumber
+            };
+            ValidateIdCard(idCard);
+
+            member.IdentityCards.Add(idCard);
+            await _context.SaveChangesAsync();
             return member;
         }
 
@@ -86,22 +224,22 @@ namespace NightClub.Service.Members
         {
             if (!idCard.IsDateValid())
             {
-                throw new CustomBadRequestException();
+                throw new CustomBadRequestException(ExceptionMessage.IdCardInvalidDate);
             }
 
             if (DateTime.Compare(idCard.ExpirationDate, DateTime.Today) < 0)
             {
-                throw new CustomBadRequestException();
+                throw new CustomBadRequestException(ExceptionMessage.IdCardExpired);
             }
 
             if (!IdentityCard.IsValidNiss(idCard.NationalRegisterNumber))
             {
-                throw new CustomBadRequestException();
+                throw new CustomBadRequestException(ExceptionMessage.IdCardInvalidNiss);
             }
 
-            if (idCard.CalculateAge() < MinimumAge)
+            if (idCard.CalculateAge(DateTime.Today) < MinimumAge)
             {
-                throw new CustomBadRequestException();
+                throw new CustomBadRequestException(ExceptionMessage.MemberInvalidAge);
             }
         }
 

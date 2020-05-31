@@ -3,15 +3,17 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using NightClub.Infrastructure.Contexts;
 
 namespace NightClub.Infrastructure.Migrations
 {
     [DbContext(typeof(NightClubContext))]
-    partial class NightClubContextModelSnapshot : ModelSnapshot
+    [Migration("20200531144945_RemoveNissConstraint")]
+    partial class RemoveNissConstraint
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder

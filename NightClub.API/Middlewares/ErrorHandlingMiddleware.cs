@@ -36,7 +36,10 @@ namespace NightClub.API.Middlewares
                 _ => HttpStatusCode.InternalServerError
             };
 
-            var result = JsonConvert.SerializeObject(new { error = ex.Message });
+            var message = code == HttpStatusCode.InternalServerError
+                ? "Internal Servor Error"
+                : ex.Message;
+            var result = JsonConvert.SerializeObject(new { error = message });
             context.Response.ContentType = "application/json";
             context.Response.StatusCode = (int)code;
             return context.Response.WriteAsync(result);

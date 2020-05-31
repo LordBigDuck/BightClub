@@ -114,9 +114,29 @@ namespace NighClub.Test.Core
                 ExpirationDate = new DateTime(2016, 11, 18)
             };
 
-            var age = idCard.CalculateAge();
+            var age = idCard.CalculateAge(new DateTime(2020, 3, 29));
 
             Assert.Equal(26, age);
+        }
+
+        [Fact]
+        public void CalculateAge_LeapYear()
+        {
+            var idCard = new IdentityCard
+            {
+                Id = 1,
+                NationalRegisterNumber = "654.23.45-456-78",
+                BirthDate = new DateTime(2016, 2, 29),
+                CardNumber = 1234567891,
+                Firstname = "John",
+                Lastname = "Doe",
+                ValidityDate = new DateTime(2016, 11, 18),
+                ExpirationDate = new DateTime(2016, 11, 18)
+            };
+
+            var age = idCard.CalculateAge(new DateTime(2020, 2, 29));
+
+            Assert.Equal(4, age);
         }
     }
 }

@@ -29,13 +29,12 @@ namespace NightClub.Core.Domains
             return comparison < 0;
         }
 
-        public int CalculateAge()
+        public int CalculateAge(DateTime toCompare)
         {
-            var today = DateTime.Today;
             var birthday = BirthDate.Date;
-            var age = today.Year - birthday.Year;
+            var age = toCompare.Year - birthday.Year;
             // Leap year
-            if (birthday.Date > today.AddYears(-age))
+            if (birthday.Date > toCompare.AddYears(-age))
             {
                 age--;
             }

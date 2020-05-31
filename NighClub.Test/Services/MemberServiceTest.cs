@@ -38,6 +38,7 @@ namespace NighClub.Test.Services
         {
             context.Members.Add(new Member
             {
+                Id = 1,
                 Email = "john.doe@gmail.com",
                 IsActive = true,
                 IdentityCards = new List<IdentityCard> {
@@ -234,6 +235,51 @@ namespace NighClub.Test.Services
             Assert.Equal("+32495414243", member.PhoneNumber);
             Assert.Equal("456.51.51-456-78", member.IdentityCards.FirstOrDefault().NationalRegisterNumber);
             Assert.NotNull(member.MemberCards.FirstOrDefault());
+        }
+
+        [Fact]
+        public async Task GenerateNewMemberCard_MemberDoesNotExist_ThrowException()
+        {
+            InjectClassFor(InitializeContext());
+
+            var exception = await Assert.ThrowsAsync<CustomNotFoundException>(() => ClassUnderTest.GenerateNewMemberCard(2));
+            Assert.Equal(ExceptionMessage.MemberIdNotFound, exception.Message);
+        }
+
+        [Fact]
+        public async Task GenerateNewMemberCard_ValidData_GenerateNewCard()
+        {
+            InjectClassFor(InitializeContext());
+
+            var member = await ClassUnderTest.GenerateNewMemberCard(1);
+
+            Assert.Equal(2, member.MemberCards.Count());
+            Assert.NotNull(member.MemberCards.SingleOrDefault(m => m.IsActive));
+        }
+
+        [Fact]
+        public async Task BlacklistMember_CommandIsNull_ThrowException()
+        {
+            InjectClassFor(InitializeContext());
+            BlacklistMemberCommand command = null;
+
+            var exception = await Assert.ThrowsAsync<CustomBadRequestException>(() => ClassUnderTest.BlacklistMember(command));
+            Assert.Equal(ExceptionMessage.NullCommand, exception.Message);
+        }
+
+        [Fact]
+        public async Task BlacklistMember_StartDateEarlierThanEndDate_ThrowException()
+        {
+            InjectClassFor(InitializeContext());
+            var command = new BlacklistMemberCommand
+            {
+                MemberId = 1,
+                EndDate = new DateTime(2019, 1, 1),
+                StartDate = new DateTime(2020, 1, 1)
+            };
+
+            var exception = await Assert.ThrowsAsync<CustomBadRequestException>(() => ClassUnderTest.BlacklistMember(command));
+            Assert.Equal(ExceptionMessage.BlacklistInvalidDate, exception.Message);
         }
     }
 }

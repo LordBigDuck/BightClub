@@ -4,8 +4,11 @@ using System.Linq;
 using System.Threading.Tasks;
 using AutoMapper;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.JsonPatch;
 using Microsoft.AspNetCore.Mvc;
 using NightClub.API.ViewModels;
+using NightClub.Core.Domains;
+using NightClub.Core.Exceptions;
 using NightClub.Service.Members;
 using NightClub.Service.Members.Commands;
 
@@ -88,7 +91,7 @@ namespace NightClub.API.Controllers
         }
 
         [HttpPost("{memberId}/generateMemberCard")]
-        public async Task<ActionResult<GetMemberViewModel>> BlacklistMember(int memberId)
+        public async Task<ActionResult<GetMemberViewModel>> GenerateNewMemberCard(int memberId)
         {
             var member = await _memberService.GenerateNewMemberCard(memberId);
 
@@ -107,6 +110,27 @@ namespace NightClub.API.Controllers
             var memberViewModel = _mapper.Map<GetMemberViewModel>(member);
 
             return CreatedAtAction(nameof(GetById), new { memberId = memberViewModel.Id }, memberViewModel);
+        }
+
+        [HttpPatch("{memberId}")]
+        public async Task<ActionResult<GetMemberViewModel>> UpdateMemberInformation(int memberId, [FromBody] JsonPatchDocument<Member> patchDoc)
+        {
+            var member = await _memberService.GetMemberById(memberId);
+
+            if (member == null)
+            {
+                throw new CustomNotFoundException(ExceptionMessage.MemberIdNotFound);
+            }
+
+            patchDoc.ApplyTo(member, ModelState);
+
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
+            member = await _memberService.UpdateMember(member);
+            return Ok(member);
         }
     }
 }

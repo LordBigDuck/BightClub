@@ -17,5 +17,6 @@ namespace NightClub.Service.Members
         Task<Member> GetMemberById(int id);
         Task<Member> GenerateNewMemberCard(int memberId);
         Task<Member> UpdateIdCard(UpdateIdCardCommand command);
+        Task<Member> UpdateMember(Member member);
     }
 }

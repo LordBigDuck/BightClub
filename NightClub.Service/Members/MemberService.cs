@@ -136,7 +136,7 @@ namespace NightClub.Service.Members
 
             if (DateTime.Compare(command.StartDate, command.EndDate) > 0)
             {
-                throw new CustomBadRequestException(ExceptionMessage.NullCommand);
+                throw new CustomBadRequestException(ExceptionMessage.BlacklistInvalidDate);
             }
 
             if (DateTime.Compare(command.EndDate, DateTime.Today) < 0)
@@ -254,6 +254,13 @@ namespace NightClub.Service.Members
             {
                 return false;
             }
+        }
+
+        public async Task<Member> UpdateMember(Member member)
+        {
+            _context.Members.Update(member);
+            await _context.SaveChangesAsync();
+            return member;
         }
     }
 }
